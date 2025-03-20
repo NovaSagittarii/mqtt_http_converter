@@ -1,6 +1,7 @@
 import express from "express";
 import Source, { SourceConfig } from "./source";
 import now from "performance-now";
+import { average } from "./util";
 
 interface TestbenchConfig {
   /** length of test in milliseconds */
@@ -23,6 +24,17 @@ export default class Testbench {
   async start() {
     console.log("Run for ", this.duration, "ms");
 
+    let rtt: number[] = [];
+    Source.client.subscribe("#");
+    Source.client.on("message", (_topic, buffer, _packet) => {
+      const t = now();
+      const [pt, _] = this.getTime(buffer.toString("utf8"));
+      if (pt) {
+        // console.log("RTT ", t - pt, "ms");
+        rtt.push(t - pt);
+      }
+    });
+
     return new Promise<void>((resolve) => {
       let isFinished = false;
       let cleanupCallback = async () => {};
@@ -35,15 +47,13 @@ export default class Testbench {
         res.status(200).send("ok");
 
         const payload = req.body;
-        for (const source of this.sources) {
-          const pt = source.timestamps[payload];
-          if (pt) {
-            // console.log("latency =", t - pt, "ms");
-            latency.push(t - pt);
-            delete source.timestamps[payload];
-            if (isFinished) {
-              await cleanupCallback();
-            }
+        let [pt, source] = this.getTime(payload);
+        if (pt && source) {
+          // console.log("latency =", t - pt, "ms");
+          latency.push(t - pt);
+          delete source.timestamps[payload];
+          if (isFinished) {
+            await cleanupCallback();
           }
         }
       });
@@ -53,9 +63,8 @@ export default class Testbench {
         await Promise.allSettled([
           new Promise((resolve) => server.close(resolve)),
           new Promise<void>((resolve) => {
-            let avgLatency = latency.reduce((a, b) => a + b);
-            avgLatency /= latency.length;
-            console.log("avg latency =", avgLatency, "ms");
+            console.log("avg latency =", average(latency), "ms");
+            console.log("avg RTT     =", average(rtt), "ms");
             resolve();
           }),
         ]);
@@ -74,5 +83,15 @@ export default class Testbench {
         }
       }, this.duration);
     });
+  }
+
+  getTime(payload: string): [number, Source] | [null, null] {
+    for (const source of this.sources) {
+      const pt = source.timestamps[payload];
+      if (pt) {
+        return [pt, source];
+      }
+    }
+    return [null, null];
   }
 }

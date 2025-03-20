@@ -20,7 +20,7 @@ export default class Source {
   private pattern: () => string;
   private topic: string;
 
-  private static client = mqtt.connect("mqtt://localhost:1883");
+  public static client = mqtt.connect("mqtt://localhost:1883");
   private intervalId: NodeJS.Timeout | null = null;
 
   /** timestamps of when messages got sent */
