@@ -1,0 +1,3 @@
+[submodule "converters/mosquitto/mosquitto"]
+	path = converters/mosquitto/mosquitto
+	url = git@github.com:eclipse-mosquitto/mosquitto.git
