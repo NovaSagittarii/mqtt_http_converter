@@ -54,6 +54,17 @@ void on_message(struct mosquitto *mosq, void *obj,
   }
 }
 
+// For suppressing post req
+// https://stackoverflow.com/a/59874052
+static size_t write_callback(char *ptr, size_t size, size_t nmemb,
+                             void *userdata) {
+  /*
+  size_t written = fwrite(ptr, size, nmemb, static_cast<FILE*>(userdata));
+  return written;
+  */
+  return size * nmemb;
+}
+
 void MqttHttpConverter::AddRule(const std::string &topic,
                                 const std::string &forward_to) {
   MqttHttpConverter::Rule rule;
@@ -98,6 +109,9 @@ void MqttHttpConverter::Rule::Send(char *data, int len) const {
   struct curl_slist *headers = NULL;
 
   if (curl) {
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, write_callback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, nullptr);
+
     curl_easy_setopt(curl, CURLOPT_URL, forward_to.c_str());
     headers = curl_slist_append(headers, "Expect:");
     headers = curl_slist_append(headers, "Content-Type: text/plain");
