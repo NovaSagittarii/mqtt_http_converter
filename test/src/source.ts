@@ -21,6 +21,7 @@ export default class Source {
   private topic: string;
 
   public static client = mqtt.connect("mqtt://localhost:1883");
+  public count: number = 0;
   private intervalId: NodeJS.Timeout | null = null;
 
   /** timestamps of when messages got sent */
@@ -37,6 +38,7 @@ export default class Source {
       const payload = this.pattern();
       const t = now();
       Source.client.publish(this.topic, payload);
+      ++this.count;
       this.timestamps[payload] = t;
     };
     run();

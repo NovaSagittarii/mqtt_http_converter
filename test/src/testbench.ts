@@ -1,7 +1,7 @@
 import express from "express";
 import Source, { SourceConfig } from "./source";
 import now from "performance-now";
-import { average } from "./util";
+import { report } from "./util";
 
 interface TestbenchConfig {
   /** length of test in milliseconds */
@@ -25,7 +25,11 @@ export default class Testbench {
     console.log("Run for ", this.duration, "ms");
 
     let rtt: number[] = [];
-    Source.client.subscribe("#");
+    Source.client.subscribe({
+      "#": {
+        qos: 0,
+      },
+    });
     Source.client.on("message", (_topic, buffer, _packet) => {
       const t = now();
       const [pt, _] = this.getTime(buffer.toString("utf8"));
@@ -37,6 +41,7 @@ export default class Testbench {
 
     return new Promise<void>((resolve) => {
       let isFinished = false;
+      let remainingSources = 0;
       let cleanupCallback = async () => {};
       let latency: number[] = [];
 
@@ -53,7 +58,11 @@ export default class Testbench {
           latency.push(t - pt);
           delete source.timestamps[payload];
           if (isFinished) {
-            await cleanupCallback();
+            if (Object.keys(source.timestamps).length === 0) {
+              if (--remainingSources === 0) {
+                await cleanupCallback();
+              }
+            }
           }
         }
       });
@@ -63,8 +72,12 @@ export default class Testbench {
         await Promise.allSettled([
           new Promise((resolve) => server.close(resolve)),
           new Promise<void>((resolve) => {
-            console.log("avg latency =", average(latency), "ms");
-            console.log("avg RTT     =", average(rtt), "ms");
+            let totalCount = this.sources
+              .map((s) => s.count)
+              .reduce((a, b) => a + b);
+            console.log("sent ", totalCount, "packets");
+            report("latency", latency);
+            report("RTT    ", rtt);
             resolve();
           }),
         ]);
@@ -75,9 +88,9 @@ export default class Testbench {
       setTimeout(async () => {
         this.sources.forEach((s) => s.stop());
         isFinished = true;
-        let remain = this.sources
-          .map((s) => Object.keys(s.timestamps).length)
-          .reduce((a, b) => a + b);
+        let times = this.sources.map((s) => Object.keys(s.timestamps).length);
+        let remain = times.reduce((a, b) => a + b);
+        remainingSources = this.sources.filter((x) => x).length;
         if (!remain) {
           await cleanupCallback();
         }
