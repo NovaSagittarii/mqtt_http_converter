@@ -1,3 +1,9 @@
+Install dependencies
+
+```
+apt install libcurlpp-dev
+```
+
 Building
 
 ```sh

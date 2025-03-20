@@ -22,6 +22,9 @@ all : ${ALL_DEPS}
 basic : sub.c mosquitto/lib/libmosquitto.a
 	${CROSS_COMPILE}${CC} $^ -o mosquitto_sub ${CLIENT_LDFLAGS} ${STATIC_LIB_DEPS} ${CLIENT_STATIC_LDADD}
 
+curlpp_example : curlpp_example.cc
+	c++ $^ -o curlpp_example -lcurlpp -lcurl
+
 static_sub : sub_client.o sub_client_output.o client_props.o client_shared.o mosquitto/lib/libmosquitto.a
 	${CROSS_COMPILE}${CC} $^ -o mosquitto_sub ${CLIENT_LDFLAGS} ${STATIC_LIB_DEPS} ${CLIENT_STATIC_LDADD}
 
@@ -47,4 +50,4 @@ client_props.o : ${CLIENT_PATH}/client_props.c ${CLIENT_PATH}/client_shared.h
 	${CROSS_COMPILE}${CC} $(CLIENT_CPPFLAGS) $(CLIENT_CFLAGS) -c $< -o $@
 
 clean:
-	rm *.o mosquitto_sub
+	rm *.o mosquitto_sub curlpp_example
