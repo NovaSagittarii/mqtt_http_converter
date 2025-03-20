@@ -1,6 +1,6 @@
 include ./mosquitto/config.mk
 
-.PHONY: all
+.PHONY: all print-flags
 
 CLIENT_PATH:=./mosquitto/client
 CC:=${CC} -I./mosquitto -I./mosquitto/include -I${CLIENT_PATH}
@@ -20,15 +20,22 @@ endif
 all : ${ALL_DEPS}
 
 # Converter
+CXXFLAGS := -std=c++20 -I/usr/include/openssl
+LDFLAGS := -L/usr/lib -lssl -lcrypto
+
+print-flags:
+    @echo "CLIENT_LDFLAGS: ${CLIENT_LDFLAGS}"
+    @echo "STATIC_LIB_DEPS: ${STATIC_LIB_DEPS}"
+    @echo "CLIENT_STATIC_LDADD: ${CLIENT_STATIC_LDADD}"
 
 converter : main.o converter.o mosquitto/lib/libmosquitto.a
-	c++ $^ -o converter -lcurl ${CLIENT_LDFLAGS} ${STATIC_LIB_DEPS} ${CLIENT_STATIC_LDADD}
+	c++ -std=c++20 $^ -o converter -lcurl ${CLIENT_LDFLAGS} ${STATIC_LIB_DEPS} ${CLIENT_STATIC_LDADD}
 
 main.o : main.cc converter.hh
-	c++ -c $< -o $@
+	c++ -std=c++20  -c $< -o $@
 
 converter.o : converter.cc converter.hh
-	c++ -I./mosquitto/include -c $< -o $@
+	c++ -std=c++20  -I./mosquitto/include -c $< -o $@
 
 # Testing
 
