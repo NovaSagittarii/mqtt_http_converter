@@ -3,7 +3,16 @@
 1. Start mosquitto MQTT broker
 
    ```sh
-   docker run --rm -it -p 1883:1883 eclipse-mosquitto
+   docker run --rm -it -p 1883:1883 -v \
+      "./config:/mosquitto/config" \
+      eclipse-mosquitto
+   ```
+
+   a. You may need to reclaim ownership of the config file
+   if you want to modify the config.
+
+   ```sh
+   sudo chown $USER config/*
    ```
 
 2. Start converter
