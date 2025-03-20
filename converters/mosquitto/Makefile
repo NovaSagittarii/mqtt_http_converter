@@ -19,6 +19,9 @@ endif
 
 all : ${ALL_DEPS}
 
+basic : sub.c mosquitto/lib/libmosquitto.a
+	${CROSS_COMPILE}${CC} $^ -o mosquitto_sub ${CLIENT_LDFLAGS} ${STATIC_LIB_DEPS} ${CLIENT_STATIC_LDADD}
+
 static_sub : sub_client.o sub_client_output.o client_props.o client_shared.o mosquitto/lib/libmosquitto.a
 	${CROSS_COMPILE}${CC} $^ -o mosquitto_sub ${CLIENT_LDFLAGS} ${STATIC_LIB_DEPS} ${CLIENT_STATIC_LDADD}
 
