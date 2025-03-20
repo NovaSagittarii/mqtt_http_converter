@@ -12,7 +12,8 @@ const t = new Testbench({
   ],
 });
 
-t.start().then(() => {
+t.start().then((res) => {
   console.log("closed");
+  console.log(res);
   process.exit(0);
 });

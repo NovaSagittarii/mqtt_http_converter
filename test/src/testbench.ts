@@ -1,13 +1,20 @@
 import express from "express";
 import Source, { SourceConfig } from "./source";
 import now from "performance-now";
-import { report } from "./util";
+import { average, report } from "./util";
 
 interface TestbenchConfig {
   /** length of test in milliseconds */
   duration: number;
 
   sources: SourceConfig[];
+}
+
+interface TestbenchResult {
+  packets: number;
+  latency: number;
+  rtt: number;
+  rps: number;
 }
 
 export default class Testbench {
@@ -30,16 +37,21 @@ export default class Testbench {
         qos: 0,
       },
     });
-    Source.client.on("message", (_topic, buffer, _packet) => {
+    const handleMqttMessage = (
+      _topic: string,
+      buffer: Buffer,
+      _packet: any,
+    ) => {
       const t = now();
       const [pt, _] = this.getTime(buffer.toString("utf8"));
       if (pt) {
         // console.log("RTT ", t - pt, "ms");
         rtt.push(t - pt);
       }
-    });
+    };
+    Source.client.on("message", handleMqttMessage);
 
-    return new Promise<void>((resolve) => {
+    return new Promise<TestbenchResult | null>((resolve) => {
       let isFinished = false;
       let remainingSources = 0;
       let cleanupCallback = async () => {};
@@ -69,19 +81,33 @@ export default class Testbench {
 
       const server = app.listen(3000);
       cleanupCallback = async () => {
+        let results = null;
         await Promise.allSettled([
           new Promise((resolve) => server.close(resolve)),
           new Promise<void>((resolve) => {
-            let totalCount = this.sources
+            const totalCount = this.sources
               .map((s) => s.count)
               .reduce((a, b) => a + b);
+            const rps = totalCount / (this.duration / 1000);
             console.log("sent ", totalCount, "packets");
+            console.log("RPS=", rps.toFixed(2));
             report("latency", latency);
             report("RTT    ", rtt);
+            results = {
+              packets: totalCount,
+              latency: average(latency),
+              rtt: average(rtt),
+              rps,
+            } as TestbenchResult;
             resolve();
           }),
+          // wait for any slow RTT requests before stopping
+          new Promise((resolve) => setTimeout(resolve, 100)),
         ]);
-        resolve();
+
+        Source.client.unsubscribe("#");
+        Source.client.off("message", handleMqttMessage);
+        resolve(results);
       };
 
       this.sources.forEach((s) => s.start());
