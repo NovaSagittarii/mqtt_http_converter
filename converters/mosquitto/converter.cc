@@ -95,8 +95,13 @@ int MqttHttpConverter::LoopForever(const std::string &host, int port) const {
 
 void MqttHttpConverter::Rule::Send(char *data, int len) const {
   CURL *curl = curl_easy_init();
+  struct curl_slist *headers = NULL;
+
   if (curl) {
     curl_easy_setopt(curl, CURLOPT_URL, forward_to.c_str());
+    headers = curl_slist_append(headers, "Expect:");
+    headers = curl_slist_append(headers, "Content-Type: text/plain");
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
     curl_easy_setopt(curl, CURLOPT_POSTFIELDSIZE, len);
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, data);
 
