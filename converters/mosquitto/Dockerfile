@@ -22,6 +22,4 @@ RUN make print-flags
 
 RUN make print-flags &&  make converter WITH_CJSON=no
 
-EXPOSE 1883
-
-CMD ["./converter"]
+CMD ["sh", "-c", "cat ./config.docker.txt | ./converter"]
