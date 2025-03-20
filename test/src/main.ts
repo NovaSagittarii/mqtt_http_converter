@@ -1,10 +1,17 @@
-import express from "express";
-const app = express();
+import Testbench from "./testbench";
 
-app.post("/", express.text(), function (req, res) {
-  console.log(req.headers);
-  console.log(req.body);
-  res.status(200).send("ok");
+const t = new Testbench({
+  duration: 1000,
+  sources: [
+    {
+      interval: 1,
+      pattern: () => Math.random().toString(36).slice(2),
+      topic: "random",
+    },
+  ],
 });
 
-app.listen(3000);
+t.start().then(() => {
+  console.log("closed");
+  process.exit(0);
+});
