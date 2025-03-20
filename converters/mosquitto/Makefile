@@ -19,8 +19,18 @@ endif
 
 all : ${ALL_DEPS}
 
-converter : main.cc
-	c++ $^ -o converter -lcurlpp -lcurl
+# Converter
+
+converter : main.o converter.o mosquitto/lib/libmosquitto.a
+	c++ $^ -o converter -lcurl ${CLIENT_LDFLAGS} ${STATIC_LIB_DEPS} ${CLIENT_STATIC_LDADD}
+
+main.o : main.cc converter.hh
+	c++ -c $< -o $@
+
+converter.o : converter.cc converter.hh
+	c++ -I./mosquitto/include -c $< -o $@
+
+# Testing
 
 basic : sub.c mosquitto/lib/libmosquitto.a
 	${CROSS_COMPILE}${CC} $^ -o mosquitto_sub ${CLIENT_LDFLAGS} ${STATIC_LIB_DEPS} ${CLIENT_STATIC_LDADD}
