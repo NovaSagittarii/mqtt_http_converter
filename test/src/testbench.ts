@@ -114,6 +114,7 @@ export default class Testbench {
 
         Source.client.unsubscribe("#");
         Source.client.off("message", handleMqttMessage);
+        server.close();
         resolve(results);
       };
 
@@ -127,7 +128,7 @@ export default class Testbench {
         if (!remain) {
           await cleanupCallback();
         }
-        setTimeout(cleanupCallback, 100); // ignore dropped packets
+        setTimeout(cleanupCallback, 3000); // ignore dropped packets
       }, this.duration);
     });
   }
