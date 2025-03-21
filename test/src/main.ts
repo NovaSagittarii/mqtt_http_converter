@@ -2,13 +2,13 @@ import Testbench from "./testbench";
 import { randomBytes } from "node:crypto";
 
 (async function () {
-  for (let it = 0; it < 3; ++it) {
+  for (let it = 0; it < 1; ++it) {
     console.log("starting");
     const t = new Testbench({
-      duration: 1000,
+      duration: 10000,
       sources: [
         {
-          interval: 10,
+          interval: 5,
           pattern: () => randomBytes(100).toString("base64"),
           topic: "mytopic",
         },
@@ -16,7 +16,7 @@ import { randomBytes } from "node:crypto";
     });
     const res = await t.start({ measureRtt: false });
     console.log("closed");
-    console.error(res); // send to stderr
+    console.error(JSON.stringify(res)); // send to stderr
   }
   process.exit(0);
 })();
