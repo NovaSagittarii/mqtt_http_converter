@@ -1,10 +1,19 @@
-import express from "express";
-const app = express();
+import Testbench from "./testbench";
+import { randomBytes } from "node:crypto";
 
-app.post("/", express.text(), function (req, res) {
-  console.log(req.headers);
-  console.log(req.body);
-  res.status(200).send("ok");
+const t = new Testbench({
+  duration: 10000,
+  sources: [
+    {
+      interval: 10,
+      pattern: () => randomBytes(100).toString("base64"),
+      topic: "random",
+    },
+  ],
 });
 
-app.listen(3000);
+t.start({ measureRtt: false }).then((res) => {
+  console.log("closed");
+  console.log(res);
+  process.exit(0);
+});

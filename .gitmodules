@@ -1,3 +1,6 @@
 [submodule "converters/mosquitto/mosquitto"]
 	path = converters/mosquitto/mosquitto
 	url = git@github.com:eclipse-mosquitto/mosquitto.git
+[submodule "converters/mqtt-http-apache-camel"]
+	path = converters/mqtt-http-apache-camel
+	url = git@github.com:GLKumfert/mqtt-http-apache-camel.git

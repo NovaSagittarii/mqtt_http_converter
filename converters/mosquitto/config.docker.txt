@@ -1,0 +1,5 @@
+Server host.docker.internal 1883
+Topic hello
+Send http://host.docker.internal:3000
+Topic #
+Send http://host.docker.internal:3000

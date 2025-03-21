@@ -33,6 +33,8 @@ int main() {
     std::cin >> target.http;
   }
 
+  std::cout << "Connecting to " << config.server << " on port " << config.port
+            << "\n";
   std::cout << "Starting up with " << config.targets.size() << " targets."
             << std::endl;
 
