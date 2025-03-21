@@ -1,4 +1,5 @@
-export function average(A: number[]): number {
+export function average(A: number[]): number | null {
+  if (A.length === 0) return null;
   return A.reduce((a, b) => a + b) / A.length;
 }
 

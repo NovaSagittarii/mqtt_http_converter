@@ -22,6 +22,7 @@ export default class Source {
 
   public static client = mqtt.connect("mqtt://localhost:1883");
   public count: number = 0;
+  public pending: number = 0;
   private intervalId: NodeJS.Timeout | null = null;
 
   /** timestamps of when messages got sent */
@@ -39,6 +40,7 @@ export default class Source {
       const t = now();
       Source.client.publish(this.topic, payload);
       ++this.count;
+      ++this.pending;
       this.timestamps[payload] = t;
     };
     run();

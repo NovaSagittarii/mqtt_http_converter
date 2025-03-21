@@ -2,17 +2,17 @@ import Testbench from "./testbench";
 import { randomBytes } from "node:crypto";
 
 const t = new Testbench({
-  duration: 1000,
+  duration: 10000,
   sources: [
     {
-      interval: 1,
+      interval: 10,
       pattern: () => randomBytes(100).toString("base64"),
       topic: "random",
     },
   ],
 });
 
-t.start().then((res) => {
+t.start({ measureRtt: false }).then((res) => {
   console.log("closed");
   console.log(res);
   process.exit(0);

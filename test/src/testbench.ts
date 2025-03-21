@@ -10,6 +10,10 @@ interface TestbenchConfig {
   sources: SourceConfig[];
 }
 
+interface TestbenchRunConfig {
+  measureRtt?: boolean;
+}
+
 interface TestbenchResult {
   packets: number;
   latency: number;
@@ -28,15 +32,17 @@ export default class Testbench {
     console.log(sources);
   }
 
-  async start() {
+  async start({ measureRtt = true }: TestbenchRunConfig = {}) {
     console.log("Run for ", this.duration, "ms");
 
     let rtt: number[] = [];
-    Source.client.subscribe({
-      "#": {
-        qos: 0,
-      },
-    });
+    if (measureRtt) {
+      Source.client.subscribe({
+        "#": {
+          qos: 0,
+        },
+      });
+    }
     const handleMqttMessage = (
       _topic: string,
       buffer: Buffer,
@@ -66,12 +72,12 @@ export default class Testbench {
         const payload = req.body;
         let [pt, source] = this.getTime(payload);
         if (pt && source) {
-          // console.log("latency =", t - pt, "ms");
+          // console.log("latency =", t - pt, "ms", source);
           latency.push(t - pt);
-          delete source.timestamps[payload];
+          --source.pending;
           if (isFinished) {
-            if (Object.keys(source.timestamps).length === 0) {
-              if (--remainingSources === 0) {
+            if (source.pending <= 0) {
+              if (--remainingSources <= 0) {
                 await cleanupCallback();
               }
             }
@@ -81,6 +87,7 @@ export default class Testbench {
 
       const server = app.listen(3000);
       cleanupCallback = async () => {
+        cleanupCallback = async () => {}; // run once
         let results = null;
         await Promise.allSettled([
           new Promise((resolve) => server.close(resolve)),
@@ -120,6 +127,7 @@ export default class Testbench {
         if (!remain) {
           await cleanupCallback();
         }
+        setTimeout(cleanupCallback, 100); // ignore dropped packets
       }, this.duration);
     });
   }
