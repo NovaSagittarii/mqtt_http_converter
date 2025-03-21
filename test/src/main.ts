@@ -2,12 +2,12 @@ import Testbench from "./testbench";
 import { randomBytes } from "node:crypto";
 
 const t = new Testbench({
-  duration: 10000,
+  duration: 1000,
   sources: [
     {
       interval: 10,
       pattern: () => randomBytes(100).toString("base64"),
-      topic: "random",
+      topic: "mytopic",
     },
   ],
 });
