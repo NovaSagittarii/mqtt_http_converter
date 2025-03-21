@@ -114,6 +114,7 @@ export default class Testbench {
 
         Source.client.unsubscribe("#");
         Source.client.off("message", handleMqttMessage);
+        server.close();
         resolve(results);
       };
 
